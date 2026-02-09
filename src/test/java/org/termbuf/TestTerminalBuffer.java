@@ -1,5 +1,6 @@
 package org.termbuf;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -93,4 +94,57 @@ class TerminalBufferTest {
         // this would work if we also remove the line after clearing it.
         //assertEquals(0, buffer.getScreenAndScrollbackAsStr().lines().count()); // scrollback cleared
     }
+
+    // additional cursor-line tests
+    @Test
+    void testWriteExactLineWidth_SkipsWhenLineFull() {
+        buffer.write("1234"); // before skipping line
+        assertEquals(0, buffer.getCursorPosRow()); //stays on first line
+        assertEquals(4, buffer.getCursorPosCol()); //after inserts
+
+        buffer.write("5"); // exactly fills first row
+        assertEquals(1, buffer.getCursorPosRow()); //moves to second line
+        assertEquals(0, buffer.getCursorPosCol()); //resets column
+    }
+
+    @Test
+    void testNewlineAtEndOfRow() {
+        buffer.write("jl");
+        buffer.setCursorPos(0, 2);
+        buffer.write("\n");
+        assertEquals(1, buffer.getCursorPosRow());
+        assertEquals(0, buffer.getCursorPosCol());
+    }
+
+    // test bounds for cursor movement
+    @Test
+    void testMoveCursorBoundaries_StaysWithin() {
+        TerminalBuffer buffer = new TerminalBuffer(3, 2, 2);
+        buffer.moveCursor(CursorDirection.UP, 1);
+        assertEquals(0, buffer.getCursorPosRow());
+        buffer.moveCursor(CursorDirection.LEFT, 5);
+        assertEquals(0, buffer.getCursorPosCol());
+        buffer.moveCursor(CursorDirection.DOWN, 10);
+        assertEquals(1, buffer.getCursorPosRow());
+        buffer.moveCursor(CursorDirection.RIGHT, 10);
+        assertEquals(2, buffer.getCursorPosCol());
+    }
+
+    @Test
+    void testWriteEmptyOrNull_NothingHappens() {
+        buffer.write(""); // nothing happens
+        assertEquals(0, buffer.getCursorPosRow());
+        assertEquals(0, buffer.getCursorPosCol());
+    }
+
+    @Test
+    void testScrollbackLimit_CorrectSize() {
+        TerminalBuffer buffer = new TerminalBuffer(2, 1, 2);
+        buffer.write("qw");
+        buffer.write("df");
+        buffer.write("lk");
+        assertEquals(2, buffer.getScrollbackLineAsString(0).length());
+    }
+
+
 }

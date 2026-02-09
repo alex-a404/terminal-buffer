@@ -80,4 +80,27 @@ public class TestTerminalLine {
         assertEquals('0', line.getCell(3).getCharacter());
     }
 
+    @Test
+    void testInsertShiftsCells_MustShift() {
+        for (int i = 0; i < 5; i++) {
+            line.getCell(i).setCharacter((char)('0' + i));
+        }
+        TerminalCell cell = new TerminalCell();
+        cell.setCharacter('X');
+        line.insertAt(2, cell);
+        assertEquals('X', line.getCell(2).getCharacter());
+        assertEquals('2', line.getCell(3).getCharacter()); // shifted
+    }
+
+    @Test
+    void testRepeatedFillAndClear_MustFillAll() {
+        line.fill('A');
+        line.clear();
+        line.fill('B');
+        for (int i = 0; i < 5; i++) {
+            assertEquals('B', line.getCell(i).getCharacter());
+        }
+    }
+
+
 }
